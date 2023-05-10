@@ -46,18 +46,6 @@ FourOhMe can be used in three ways:
 - `-url`: URL to make requests to
 - `-silent`: Don't print shizzle
 
-## Headers
-
-By default, FourOhMe makes requests with the following headers:
-
-- `X-Forwarded-For: 127.0.0.1:80`
-- `X-Custom-IP-Authorization: 127.0.0.1`
-- `X-Original-URL: %URL%`
-- `X-Original-URL: %PATH%`
-- `HTTP: OPTIONS`
-
-You can add or modify these headers by editing the `headersList` variable in the script.
-
 ## Output
 
 FourOhMe prints the responses of each request in a colored format. A successful response (HTTP status code 200) is printed in green, while an unsuccessful response is printed in red.
