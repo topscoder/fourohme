@@ -1,3 +1,29 @@
+/*
+FourOhMe is a tool for finding a bypass for URL's that respond with a 40* HTTP code.
+It makes requests to a given URL with different headers and prints the responses.
+
+Three input sources are supported out of the box. Either via STDIN, a file containing URLs or a single URL.
+
+*** It's you ^ 2
+
+Usage:
+
+	fourohme [flags] [path ...]
+
+The flags are:
+
+	-silent
+	    Do not print shizzle. Only what matters.
+		Ideal in your command chain.
+	-file
+		File containing a list of urls
+	-url
+	    Single URL in https://foo.bar format
+
+When gofmt reads from standard input, it accepts either a single URL
+or a list of URLs. It's meant to be used in your command chain.
+For example: cat domains.txt | httpx -silent -mc 401,402,403,404,405 | fourohme -silent
+*/
 package main
 
 import (
