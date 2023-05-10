@@ -13,7 +13,7 @@ import (
 func main() {
 	urlPtr, filePtr, silentPtr := parseCommandLineFlags()
 
-	if *silentPtr == false {
+	if !*silentPtr {
 		showBanner()
 	}
 
