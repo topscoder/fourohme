@@ -11,7 +11,11 @@ import (
 )
 
 func main() {
-	urlPtr, filePtr := parseCommandLineFlags()
+	urlPtr, filePtr, silentPtr := parseCommandLineFlags()
+
+	if *silentPtr == false {
+		showBanner()
+	}
 
 	headersList := []map[string]string{
 		{"X-Forwarded-For": "127.0.0.1:80"},
@@ -50,12 +54,13 @@ func main() {
 	}
 }
 
-func parseCommandLineFlags() (*string, *string) {
+func parseCommandLineFlags() (*string, *string, *bool) {
 	urlPtr := flag.String("url", "", "URL to make requests to")
 	filePtr := flag.String("file", "", "Path to a file containing URLs")
+	silentPtr := flag.Bool("silent", false, "Don't print shizzle. Only what matters.")
 	flag.Parse()
 
-	return urlPtr, filePtr
+	return urlPtr, filePtr, silentPtr
 }
 
 func readUrlsFromInput(urlPtr, filePtr *string) []string {
@@ -157,4 +162,22 @@ func printOutput(statusCode int, verb string, url string, path string, headers m
 	} else {
 		fmt.Printf("\033[31m%d => HTTP %s %s%s %v\033[0m\n", statusCode, verb, url, path, headers)
 	}
+}
+
+func showBanner() {
+	const banner = `
+
+
+███████╗░█████╗░██╗░░░██╗██████╗░░░░░░░░█████╗░██╗░░██╗░░░░░░███╗░░░███╗███████╗
+██╔════╝██╔══██╗██║░░░██║██╔══██╗░░░░░░██╔══██╗██║░░██║░░░░░░████╗░████║██╔════╝
+█████╗░░██║░░██║██║░░░██║██████╔╝█████╗██║░░██║███████║█████╗██╔████╔██║█████╗░░
+██╔══╝░░██║░░██║██║░░░██║██╔══██╗╚════╝██║░░██║██╔══██║╚════╝██║╚██╔╝██║██╔══╝░░
+██║░░░░░╚█████╔╝╚██████╔╝██║░░██║░░░░░░╚█████╔╝██║░░██║░░░░░░██║░╚═╝░██║███████╗
+╚═╝░░░░░░╚════╝░░╚═════╝░╚═╝░░╚═╝░░░░░░░╚════╝░╚═╝░░╚═╝░░░░░░╚═╝░░░░░╚═╝╚══════╝
+	
+	0.1	by @topscoder
+
+	`
+
+	fmt.Println(banner)
 }
