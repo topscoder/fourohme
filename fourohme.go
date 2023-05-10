@@ -19,12 +19,22 @@ func main() {
 
 	headersList := []map[string]string{
 		{"X-Forwarded-For": "127.0.0.1:80"},
+		{"X-Forwarded-For": "127.0.0.1"},
+		{"X-Forwarded-Host": "127.0.0.1"},
 		{"X-Custom-IP-Authorization": "127.0.0.1"},
 		{"X-Host": "127.0.0.1"},
+		{"X-Remote-IP": "127.0.0.1"},
+		{"X-Originating-IP": "127.0.0.1"},
 		{"X-Original-URL": "%URL%"},
 		{"X-Original-URL": "%PATH%"},
 		{"X-rewrite-url": "%PATH%"},
+		{"Content-Length": "0", "HTTP": "GET"},
 		{"Content-Length": "0", "HTTP": "POST"},
+		{"HTTP": "POST"},
+		{"HTTP": "HEAD"},
+		{"HTTP": "PUT"},
+		{"HTTP": "DELETE"},
+		{"HTTP": "PATCH"},
 		{"HTTP": "OPTIONS"},
 		{"HTTP": "TRACE"},
 	}
