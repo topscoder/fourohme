@@ -20,13 +20,19 @@ FourOhMe can be used in three ways:
 
    where `urls.txt` is a file containing a list of URLs separated by newlines.
 
-2. Reading URLs from standard input:
+2. Reading URLs from standard input (`STDIN`):
 
    ```
    $ cat urls.txt | fourohme
    ```
 
    where `urls.txt` is a file containing a list of URLs separated by newlines.
+   
+   Or attach in your favourite chain commands:
+   
+   ```
+   $ cat domains.txt | subfinder | httpx -mc 401,402,403,404,405 -silent | fourohme 
+   ```
 
 3. Reading single URL:
 
