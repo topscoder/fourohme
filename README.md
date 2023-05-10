@@ -1,6 +1,7 @@
 # FourOhMe
 
-FourOhMe is a tool for testing HTTP headers on a website in order to try to bypass 40* HTTP codes. It makes requests to a given URL with different headers and prints the responses.
+FourOhMe is a tool for testing HTTP headers on a website in order to try to bypass 40* HTTP codes. 
+It tries to bypass the 40* status code by manipulating the HTTP request via HTTP headers and URL payloads.
 
 ## Installation
 
