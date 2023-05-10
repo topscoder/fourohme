@@ -6,7 +6,7 @@ FourOhMe is a tool for testing HTTP headers on a website in order to try to bypa
 
 Install Golang, then run:
 
-`go install -v github.com/topscoder/fourohme`
+`go install -v github.com/topscoder/fourohme@latest`
 
 ## Usage
 

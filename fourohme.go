@@ -20,9 +20,13 @@ func main() {
 	headersList := []map[string]string{
 		{"X-Forwarded-For": "127.0.0.1:80"},
 		{"X-Custom-IP-Authorization": "127.0.0.1"},
+		{"X-Host": "127.0.0.1"},
 		{"X-Original-URL": "%URL%"},
 		{"X-Original-URL": "%PATH%"},
+		{"X-rewrite-url": "%PATH%"},
+		{"Content-Length": "0", "HTTP": "POST"},
 		{"HTTP": "OPTIONS"},
+		{"HTTP": "TRACE"},
 	}
 
 	urls := readUrlsFromInput(urlPtr, filePtr)
