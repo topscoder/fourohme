@@ -7,14 +7,16 @@ import (
 	"sync"
 )
 
-func TalkHttpBaby(ch chan Request, wg *sync.WaitGroup) {
+func TalkHttpBaby(ch chan Request, wg *sync.WaitGroup, silent bool) {
 	defer wg.Done() // Schedule the wg.Done() function call to be executed when the function returns
 
 	request := <-ch
 
 	statusCode := ExecuteHttpRequest(request)
 
-	printOutput(statusCode, request.Verb, request.Url, request.Headers)
+	if !silent || (statusCode >= 200 && statusCode <= 303) {
+		printOutput(statusCode, request.Verb, request.Url, request.Headers)
+	}
 }
 
 func ExecuteHttpRequest(request Request) int {

@@ -413,7 +413,7 @@ func main() {
 			request := fourohme.Request{Verb: "GET", Url: schemedUrl, Headers: headerList}
 
 			ch <- request
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		// Try each header in composedHeadersList
@@ -427,7 +427,7 @@ func main() {
 
 			ch <- request
 
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		// Try each header with %URL% variable
@@ -442,7 +442,7 @@ func main() {
 
 			ch <- request
 
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		sUrl, sPath := fourohme.GetHostAndPath(parsedURL)
@@ -459,7 +459,7 @@ func main() {
 
 			ch <- request
 
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		// Try each URL payload in urlPayloadsList
@@ -473,7 +473,7 @@ func main() {
 
 			ch <- request
 
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		// Try with different HTTP Verbs
@@ -485,7 +485,7 @@ func main() {
 
 			ch <- request
 
-			go fourohme.TalkHttpBaby(ch, &wg)
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
 		close(ch)
