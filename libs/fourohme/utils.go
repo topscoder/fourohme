@@ -6,14 +6,15 @@ import (
 	"net/url"
 )
 
-func ParseCommandLineFlags() (*string, *string, *bool, *int) {
+func ParseCommandLineFlags() (*string, *string, *bool, *int, *bool) {
 	urlPtr := flag.String("url", "", "URL to make requests to")
 	filePtr := flag.String("file", "", "Path to a file containing URLs")
 	silentPtr := flag.Bool("silent", false, "Don't print shizzle. Only what matters.")
 	threadsPtr := flag.Int("threads", 4, "The amount of threads to be used to execute the HTTP requests. Be gentle or get blocked.")
+	forcePtr := flag.Bool("force", false, "Force the scanner to scan all URL's regardless of the initial HTTP status code.")
 	flag.Parse()
 
-	return urlPtr, filePtr, silentPtr, threadsPtr
+	return urlPtr, filePtr, silentPtr, threadsPtr, forcePtr
 }
 
 func GetHostAndPath(parsedURL *url.URL) (string, string) {

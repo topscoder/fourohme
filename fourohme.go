@@ -35,7 +35,7 @@ import (
 )
 
 func main() {
-	urlPtr, filePtr, silentPtr, threadsPtr := fourohme.ParseCommandLineFlags()
+	urlPtr, filePtr, silentPtr, threadsPtr, forcePtr := fourohme.ParseCommandLineFlags()
 
 	if !*silentPtr {
 		fourohme.ShowBanner()
@@ -135,12 +135,14 @@ func main() {
 		}
 
 		// Verify if the URL indeed responds with a 40* HTTP code
-		request := fourohme.Request{Verb: "GET", Url: pUrl, Headers: nil}
-		statusCode := fourohme.ExecuteHttpRequest(request)
+		if !*forcePtr {
+			request := fourohme.Request{Verb: "GET", Url: pUrl, Headers: nil}
+			statusCode := fourohme.ExecuteHttpRequest(request)
 
-		if statusCode < 400 || statusCode > 440 {
-			fmt.Printf("%s does return %d and therefore doesn't match our criteria. We skip this one.", pUrl, statusCode)
-			continue
+			if statusCode < 400 || statusCode > 440 {
+				fmt.Printf("%s does return %d and therefore doesn't match our criteria. We skip this one.\n", pUrl, statusCode)
+				continue
+			}
 		}
 
 		// Try each header in composedHeadersList
