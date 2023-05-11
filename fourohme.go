@@ -88,6 +88,7 @@ func main() {
 		"X-Original-URL",
 		"X-Originally-Forwarded-For",
 		"X-Originating-IP",
+		"X-Override-URL",
 		"X-Proxy-Url",
 		"X-ProxyUser-Ip",
 		"X-Real-Ip",
@@ -121,7 +122,7 @@ func main() {
 		}
 	}
 
-	httpVerbsList := []string{"GET", "POST", "HEAD", "DELETE", "PUT", "PATCH", "OPTIONS", "TRACE"}
+	httpVerbsList := []string{"GET", "POST", "HEAD", "DELETE", "PUT", "PATCH", "OPTIONS", "TRACE", "TRACK"}
 
 	// Intentionally wrapped with spaces for readability
 	urlPayloadsList := []string{
