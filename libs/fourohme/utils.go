@@ -29,8 +29,10 @@ func GetHostAndPath(parsedURL *url.URL) (string, string) {
 
 func printOutput(statusCode int, verb string, url string, headers []Header) {
 	// Print in green if it's 200
-	if statusCode == 200 {
+	if statusCode >= 200 && statusCode < 300 {
 		fmt.Printf("\033[32m%d => HTTP %s %s %v\033[0m\n", statusCode, verb, url, headers)
+	} else if statusCode >= 300 && statusCode < 400 {
+		fmt.Printf("\033[33m%d => HTTP %s %s %v\033[0m\n", statusCode, verb, url, headers)
 	} else {
 		fmt.Printf("\033[31m%d => HTTP %s %s %v\033[0m\n", statusCode, verb, url, headers)
 	}
