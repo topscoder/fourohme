@@ -43,9 +43,11 @@ FourOhMe can be used in three ways:
 
 ## Options
 
-- `-file`: Path to a file containing URLs
+- `-file`: Path to a file containing URLs.
+- `-force`: Force the scanner to scan all URL's regardless of the initial HTTP status code.
+- `-silent`: Don't print shizzle. Only what matters.
+- `-threads`: The amount of threads to be used to execute the HTTP requests. Be gentle or get blocked. (default 4)
 - `-url`: URL to make requests to
-- `-silent`: Don't print shizzle
 
 ## Output
 

@@ -13,7 +13,7 @@ Usage:
 The flags are:
 
 	-file string
-	      Path to a file containing URLs
+	      Path to a file containing URLs.
 	-force
 	      Force the scanner to scan all URL's regardless of the initial HTTP status code.
 	-silent
