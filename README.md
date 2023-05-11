@@ -61,6 +61,7 @@ Contributions are welcome! If you find a bug or want to suggest a new feature, p
 
 [ ] Add a WAF check
 [ ] Add content check filter false positives ("The requested URL was rejected")
+[ ] Try to filter false positives by checking the content-length
 
 ## License
 
