@@ -12,16 +12,20 @@ Usage:
 
 The flags are:
 
+	-file string
+	      Path to a file containing URLs
+	-force
+	      Force the scanner to scan all URL's regardless of the initial HTTP status code.
 	-silent
-	    Do not print shizzle. Only what matters.
-		Ideal in your command chain.
-	-file
-		File containing a list of urls
-	-url
-	    Single URL in https://foo.bar format
+	      Don't print shizzle. Only what matters.
+	-threads int
+	      The amount of threads to be used to execute the HTTP requests. Be gentle or get blocked. (default 4)
+	-url string
+	      URL to make requests to
 
-When gofmt reads from standard input, it accepts either a single URL
+When fourohme reads from standard input, it accepts either a single URL
 or a list of URLs. It's meant to be used in your command chain.
+
 For example: cat domains.txt | httpx -silent -mc 401,402,403,404,405 | fourohme -silent
 */
 package main
@@ -369,6 +373,11 @@ func main() {
 		"%2e/${path} ",
 	}
 
+	schemeList := []string{
+		"http",
+		"https",
+	}
+
 	// Let's Rock
 	urls := fourohme.ReadUrlsFromInput(urlPtr, filePtr)
 
@@ -389,9 +398,24 @@ func main() {
 			}
 		}
 
-		// Try each header in composedHeadersList
 		var wg sync.WaitGroup
 		ch := make(chan fourohme.Request, *threadsPtr)
+
+		// Try different schemes
+		wg.Add(1)
+
+		for _, scheme := range schemeList {
+
+			schemedUrl := fmt.Sprintf("%s://%s%s", scheme, parsedURL.Host, parsedURL.Path)
+
+			var headerList []fourohme.Header
+			request := fourohme.Request{Verb: "GET", Url: schemedUrl, Headers: headerList}
+
+			ch <- request
+			go fourohme.TalkHttpBaby(ch, &wg)
+		}
+
+		// Try each header in composedHeadersList
 		for _, header := range composedHeadersList {
 			wg.Add(1)
 
@@ -438,12 +462,12 @@ func main() {
 		}
 
 		// Try each URL payload in urlPayloadsList
-		var headerList []fourohme.Header
 		for _, payload := range urlPayloadsList {
 			wg.Add(1)
 
 			loadedUrl := fmt.Sprintf("%s%s%s", sUrl, sPath, strings.TrimSpace(payload))
 
+			var headerList []fourohme.Header
 			request := fourohme.Request{Verb: "GET", Url: loadedUrl, Headers: headerList}
 
 			ch <- request
@@ -455,6 +479,7 @@ func main() {
 		for _, verb := range httpVerbsList {
 			wg.Add(1)
 
+			var headerList []fourohme.Header
 			request := fourohme.Request{Verb: verb, Url: pUrl, Headers: headerList}
 
 			ch <- request
