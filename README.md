@@ -57,6 +57,11 @@ FourOhMe prints the responses of each request in a colored format. A successful 
 
 Contributions are welcome! If you find a bug or want to suggest a new feature, please open an issue or submit a pull request.
 
+## TODO
+
+[ ] Add a WAF check
+[ ] Add content check filter false positives ("The requested URL was rejected")
+
 ## License
 
 FourOhMe is released under the [MIT License](https://github.com/topscoder/fourohme/blob/main/LICENSE).
