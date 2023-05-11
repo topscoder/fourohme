@@ -330,7 +330,7 @@ func main() {
 		" & ",
 		" # ",
 		" #? ",
-		" % ",
+		// " % ",
 		" %09 ",
 		" %09; ",
 		" %09.. ",
@@ -403,9 +403,8 @@ func main() {
 		ch := make(chan fourohme.Request, *threadsPtr)
 
 		// Try different schemes
-		wg.Add(1)
-
 		for _, scheme := range schemeList {
+			wg.Add(1)
 
 			schemedUrl := fmt.Sprintf("%s://%s%s", scheme, parsedURL.Host, parsedURL.Path)
 
@@ -490,7 +489,5 @@ func main() {
 
 		close(ch)
 		wg.Wait()
-
-		fmt.Println("")
 	}
 }
