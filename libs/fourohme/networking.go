@@ -1,6 +1,7 @@
 package fourohme
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"sync"
@@ -11,12 +12,12 @@ func TalkHttpBaby(ch chan Request, wg *sync.WaitGroup) {
 
 	request := <-ch
 
-	statusCode := executeHttpRequest(request)
+	statusCode := ExecuteHttpRequest(request)
 
 	printOutput(statusCode, request.Verb, request.Url, request.Headers)
 }
 
-func executeHttpRequest(request Request) int {
+func ExecuteHttpRequest(request Request) int {
 	verb := request.Verb
 	url := request.Url
 	headers := request.Headers
@@ -31,7 +32,17 @@ func executeHttpRequest(request Request) int {
 		req.Header.Add(header.Key, header.Value)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	// Create a transport with insecure skip verify
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	// Create a client with the custom transport
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		resp.Body.Close()
