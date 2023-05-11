@@ -18,6 +18,13 @@ func TalkHttpBaby(ch chan Request, wg *sync.WaitGroup) {
 }
 
 func ExecuteHttpRequest(request Request) int {
+
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Recovered from panic:", err)
+		}
+	}()
+
 	verb := request.Verb
 	url := request.Url
 	headers := request.Headers
@@ -46,7 +53,7 @@ func ExecuteHttpRequest(request Request) int {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		resp.Body.Close()
 		return -1
 	}
