@@ -487,6 +487,25 @@ func main() {
 			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
 		}
 
+		// Try some custom variants
+		wg.Add(1)
+		var headerList []fourohme.Header
+
+		var urlList []string
+		urlList = append(urlList, fmt.Sprintf("%s/%s//", sUrl, sPath))
+		urlList = append(urlList, fmt.Sprintf("%s/.%s/..", sUrl, sPath))
+		urlList = append(urlList, fmt.Sprintf("%s/;%s", sUrl, sPath))
+		urlList = append(urlList, fmt.Sprintf("%s/.;%s", sUrl, sPath))
+		urlList = append(urlList, fmt.Sprintf("%s//;/%s", sUrl, sPath))
+		urlList = append(urlList, fmt.Sprintf("%s%s", sUrl, strings.ToUpper(sPath)))
+
+		for _, url := range urlList {
+			wg.Add(1)
+			request := fourohme.Request{Verb: "GET", Url: url, Headers: headerList}
+			ch <- request
+			go fourohme.TalkHttpBaby(ch, &wg, *silentPtr)
+		}
+
 		close(ch)
 		wg.Wait()
 	}
